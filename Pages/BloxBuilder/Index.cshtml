@@ -1,0 +1,240 @@
+@page
+@model PAMTestFlow.Pages.BloxBuilder.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>BloxBuilder</h1>
+<div class="dropdown-container">
+    <form method="post" asp-page-handler="FilterBlocks" style="flex: 1;">
+        <label for="templateDropdown">Select Template:</label>
+        <select id="templateDropdown" name="templateId" class="form-control" onchange="this.form.submit()">
+            <option value="">-- Select a Template --</option>
+            @foreach (var template in Model.Templates)
+            {
+                <option value="@template.TemplateID" selected="@(template.TemplateID == Model.SelectedTemplateId ? "selected" : null)">@template.TemplateName</option>
+            }
+        </select>
+        <input type="hidden" id="selectedTemplateId" name="selectedTemplateId" value="@Model.SelectedTemplateId" />
+    </form>
+
+    <form method="post" style="flex: 1;">
+        <label for="emulationDevice">Select Emulation:</label>
+        <select id="emulationDevice" name="emulationDevice" class="form-control">
+            <option value="Desktop">Desktop</option>
+            <option value="iPhone 12">iPhone 12</option>
+            <option value="Pixel 7">Pixel 7</option>
+            <option value="iPad Pro 11">iPad Pro 11</option>
+            <option value="iPad Mini">iPad Mini</option>
+        </select>
+    </form>
+</div>
+
+<div>
+    <form method="post" asp-page-handler="Test" onsubmit="return validateTemplateSelection()">
+        <input type="hidden" name="templateId" value="@Model.SelectedTemplateId" />
+        <input type="hidden" name="emulationDevice" value="@Model.EmulationDevice" />
+        <label for="websiteUrl">Website URL:</label>
+        <input type="text" id="websiteUrl" name="websiteUrl" class="form-control" placeholder="Enter website URL" value="@Model.WebsiteURL" required />
+        <div class="buttons-row">
+            <div id="button-1">
+                <button type="button" class="btn btn-primary" onclick="saveWebsiteUrl()">Save URL</button>
+            </div>
+            <div id="button-2">
+                <button type="submit" class="btn btn-success" onclick="updateHiddenEmulationValue()">Run Test</button>
+            </div>
+            <div id="button-3">
+                <button type="button" class="btn btn-primary" onclick="navigateToCreate()">Create New</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="blocksContainer">
+    @foreach (var item in Model.BuildingBlock)
+    {
+        <div class="block-item" data-id="@item.BlockID">
+            <div class="block-header">
+                <h4>@Html.DisplayFor(modelItem => item.BlockName)</h4>
+                <div class="block-actions">
+                    <a asp-page="./Edit" asp-route-id="@item.BlockID">Edit</a> |
+                    <a asp-page="./Delete" asp-route-id="@item.BlockID"> Delete</a>
+                    <button type="button" class="btn btn-secondary" onclick="moveBlockUp(@item.BlockID)">↑</button>
+                    <button type="button" class="btn btn-secondary" onclick="moveBlockDown(@item.BlockID)">↓</button>
+                </div>
+            </div>
+            <div class="block-content">
+                <div class="block-item-content">
+                    <p><strong>Sequence Order:</strong> <span class="sequence-order">@Html.DisplayFor(modelItem => item.SequenceOrder)</span></p>
+                </div>
+                <div class="block-item-content">
+                    <p><strong>Status:</strong> 
+                        <span class="block-status status-@(item.BlockStatus)" data-id="@item.BlockID">
+                            @if (item.BlockStatus == 0)
+                            {
+                                <span class="status-icon sandtimer">⏳</span>
+                            }
+                            else if (item.BlockStatus == 1)
+                            {
+                                <span class="status-icon tick">✔️</span>
+                            }
+                            else if (item.BlockStatus == 2)
+                            {
+                                <span class="status-icon cross">❌</span>
+                            }
+                        </span>
+                    </p>
+                </div>
+                <div class="block-item-content">
+                    <p><strong>Template:</strong> @Html.DisplayFor(modelItem => item.Template.TemplateName)</p>
+                </div>
+                <div class="block-item-content">
+                    <p><strong>Wait Interval:</strong> @Html.DisplayFor(modelItem => item.WaitInterval)s</p>
+                </div>
+                <div class="block-item-content" id="user-input-display">
+                    <p><strong>User Inputs:</strong></p>
+                    <ul>
+                        @foreach (var input in item.UserInputs)
+                        {
+                            <li>@Html.DisplayFor(modelItem => input.UserInput)</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.11/dist/interact.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="~/js/site.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/progressHub")
+            .build();
+
+        connection.on("ReceiveStatusUpdate", (blockId, status) => {
+            const statusElement = document.querySelector(`.block-status[data-id='${blockId}']`);
+            if (statusElement) {
+                statusElement.className = `block-status status-${status}`;
+                if (status == 0) {
+                    statusElement.innerHTML = '<span class="status-icon-sandtimer">⏳</span>';
+                } else if (status == 1) {
+                    statusElement.innerHTML = '<span class="status-icon-tick">✔️</span>';
+                } else if (status == 2) {
+                    statusElement.innerHTML = '<span class="status-icon-cross">❌</span>';
+                }
+            }
+        });
+
+        connection.start().catch(err => console.error(err.toString()));
+        
+        function validateTemplateSelection() {
+            const templateDropdown = document.getElementById('templateDropdown');
+            if (templateDropdown.value === "") {
+                alert("Please select a template first.");
+                return false;
+            }
+            return true;
+        }
+
+        function moveBlockUp(blockId) {
+            const block = document.querySelector(`.block-item[data-id='${blockId}']`);
+            const prevBlock = block.previousElementSibling;
+            if (prevBlock) {
+                block.parentNode.insertBefore(block, prevBlock);
+                updateSequenceOrder();
+            }
+        }
+
+        function moveBlockDown(blockId) {
+            const block = document.querySelector(`.block-item[data-id='${blockId}']`);
+            const nextBlock = block.nextElementSibling;
+            if (nextBlock) {
+                block.parentNode.insertBefore(nextBlock, block);
+                updateSequenceOrder();
+            }
+        }
+
+        function updateSequenceOrder() {
+            const blocks = document.querySelectorAll('.block-item');
+            const blockOrder = Array.from(blocks).map((block, index) => ({
+                blockId: block.getAttribute('data-id'),
+                sequenceOrder: index + 1
+            }));
+
+            fetch('@Url.Page("/BloxBuilder/Index", new { handler = "UpdateSequenceOrder" })', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() // Add anti-forgery token
+                },
+                body: JSON.stringify(blockOrder)
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            }).then(data => {
+                console.log('Sequence order updated successfully:', data);
+                updateDOMSequenceOrder(blockOrder); // Update the DOM to reflect the changes
+            }).catch(error => {
+                console.error('Error updating sequence order:', error);
+            });
+        }
+
+        function updateDOMSequenceOrder(blockOrder) {
+            blockOrder.forEach(order => {
+                const block = document.querySelector(`.block-item[data-id='${order.blockId}']`);
+                const sequenceOrderElement = block.querySelector('.sequence-order');
+                sequenceOrderElement.textContent = order.sequenceOrder;
+            });
+        }
+
+        function saveWebsiteUrl() {
+            const templateId = document.getElementById('selectedTemplateId').value;
+            const websiteUrl = document.getElementById('websiteUrl').value;
+
+            if (!templateId) {
+                alert("Please select a template first.");
+                return;
+            }
+
+            fetch('@Url.Page("/BloxBuilder/Index", new { handler = "SaveWebsiteUrl" })', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() // Add anti-forgery token
+                },
+                body: JSON.stringify({ templateId: templateId, websiteUrl: websiteUrl })
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            }).then(data => {
+                if (data.success) {
+                    alert("Website URL saved successfully.");
+                } else {
+                    alert("Failed to save website URL.");
+                }
+            }).catch(error => {
+                console.error('Error saving website URL:', error);
+            });
+            
+        }
+        function navigateToCreate() {
+        window.location.href = '/BloxBuilder/Create';
+        }
+
+        function updateHiddenEmulationValue() {
+        const emulationDevice = document.getElementById('emulationDevice').value;
+        const hiddenInput = document.querySelector('form[onsubmit="return validateTemplateSelection()"] input[name="emulationDevice"]');
+        hiddenInput.value = emulationDevice;
+        }
+    </script>
+}

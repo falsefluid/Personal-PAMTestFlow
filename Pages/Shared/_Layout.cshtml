@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - PAMTestFlow</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/PAMTestFlow.styles.css" asp-append-version="true" />
+    <style>
+        .nav-item-div {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+        }
+        .nav-item-div:hover {
+            background-color: #2E416E;
+        }
+    </style>
+</head>
+<body id="body" class="hidden"> <!-- Initially hidden -->
+    <script>
+        // Wait until the DOM is fully loaded
+        window.addEventListener('DOMContentLoaded', (event) => {
+            // Check for the saved theme in the cookies
+            var savedTheme = document.cookie.replace(/(?:(?:^|.*;\s*)theme\s*=\s*([^;]*).*$)|^.*$/, "$1");
+
+            // If a theme is found in the cookie, apply it immediately
+            if (savedTheme) {
+                document.body.className = savedTheme;
+            } else {
+                // Default to light-mode if no theme is saved
+                document.body.className = 'light-mode';
+            }
+
+            // Remove the 'hidden' class after applying the theme
+            document.body.classList.remove('hidden');
+        });
+
+        // Add click navigation for nav-item-divs
+        document.addEventListener('click', function (e) {
+            const target = e.target.closest('.nav-item-div');
+            if (target) {
+                const url = target.getAttribute('data-url');
+                if (url) {
+                    window.location.href = url;
+                }
+            }
+        });
+    </script>
+    <header>
+        <div class="logo">
+            <a href="/Index">
+                <img src="https://static.wixstatic.com/media/2cf73e_1540ebbd6bf3445fbff5e651bc553040.png" alt="pamtestflow" class="pamlogo">
+            </a>
+        </div>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light mb-3">
+            <div class="container">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <div class="navbar-nav flex-grow-1">
+                        <div class="nav-item nav-item-div text-light" data-url="/Index">
+                            Home
+                        </div>
+                        <div class="nav-item nav-item-div text-light" data-url="/KeyInfo">
+                            Key-Info
+                        </div>
+                        <div class="nav-item nav-item-div text-light" data-url="/Settings">
+                            Settings
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            &copy; 2024 - PAMTestFlow - <a asp-area="" asp-page="/Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

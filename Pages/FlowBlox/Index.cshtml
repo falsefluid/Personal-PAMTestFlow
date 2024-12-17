@@ -1,0 +1,38 @@
+@page
+@model PAMTestFlow.Pages.FlowBlox.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>TEMPLATES</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+
+<div id="blocksContainer">
+    @foreach (var item in Model.Template) {
+        <div class="block-item" data-id="@item.TemplateID">
+            <div class="block-header">
+                <h4>@Html.DisplayFor(modelItem => item.TemplateName)</h4>
+                <div class="block-actions">
+                    <a asp-page="./Edit" asp-route-id="@item.TemplateID">Edit</a> |
+                    <a asp-page="./Delete" asp-route-id="@item.TemplateID">Delete</a>
+                </div>
+            </div>
+            <div class="block-content">
+                <div class="block-item-content">
+                    <p><strong>Created Date:</strong> @Html.DisplayFor(modelItem => item.CreatedDate)</p>
+                </div>
+                <div class="block-item-content">
+                    <p><strong>Updated Date:</strong> @Html.DisplayFor(modelItem => item.UpdatedDate)</p>
+                </div>
+                <div class="block-item-content">
+                    <p style="min-width: 500px; display: inline-block;"><strong>Website:</strong> @Html.DisplayFor(modelItem => item.WebsiteURL)</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+

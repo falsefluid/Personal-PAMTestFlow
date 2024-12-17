@@ -1,0 +1,83 @@
+@page
+@model TestPageModel
+@{
+    ViewData["Title"] = "Test Page";    
+}
+
+
+<div class="container">
+<h2>@ViewData["Title"]</h2>
+<p class="lead">Click the button below to start the Playwright test. The progress will update in real-time below.</p>
+ 
+    <!-- Start Test Form -->
+<form id="startTestForm" method="post" asp-antiforgery="true">
+<input type="hidden" name="__RequestVerificationToken" value="@ViewData["AntiForgeryToken"]" />
+<button type="submit" id="startTestButton" class="btn btn-success mb-3">Start Test</button>
+</form>
+
+
+    <!-- Progress Checklist -->
+<ul id="progressList" class="list-group">
+<!-- Real-time progress updates will be added here -->
+</ul> 
+
+    <!-- Clear Progress Button -->
+<button id="clearProgressButton" class="btn btn-danger mt-3">Clear</button>
+
+</div>
+
+ 
+<!-- SignalR Script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.10/signalr.min.js"></script>
+<script type="text/javascript">
+    const connection = new signalR.HubConnectionBuilder().withUrl("/progressHub").build();
+ 
+    // Start connection to SignalR Hub
+    connection.start().then(function () {
+        console.log("Connected to SignalR Hub");
+    }).catch(function (err) {
+        console.error("Error connecting to SignalR Hub:", err.toString());
+    });
+ 
+    // Listen for progress updates
+    connection.on("ReceiveMessage", function (message) {
+        console.log("Received message:", message);
+        const li = document.createElement("li");
+        li.classList.add("list-group-item", "list-group-item-info");
+        li.textContent = message;
+        document.getElementById("progressList").appendChild(li);
+    });
+ 
+    // Form submission to trigger the Playwright test
+    document.getElementById("startTestForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        console.log("Start Test button clicked");
+ 
+        // Get the anti-forgery token from the hidden input field
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+ 
+        fetch("/TestPage?handler=RunTest", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "RequestVerificationToken": token // Add the anti-forgery token
+            }
+        }).then(response => {
+            if (response.ok) {
+                console.log("Playwright test started");
+            } else {
+                console.error("Failed to start Playwright test");
+            }
+        }).catch(error => {
+            console.error("Error starting Playwright test:", error);
+        });
+    });
+
+    document.getElementById("clearProgressButton").addEventListener("click", function () {
+        console.log("Clear button clicked");
+        document.getElementById("progressList").innerHTML = ""; // Remove all list items
+    });
+</script>
+ 
+<!-- Styling (Bootstrap) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />

@@ -1,0 +1,25 @@
+@page
+@model KeyInfoModel
+@{
+    ViewData["Title"] = "Type Blocks Information";
+}
+<h1>@ViewData["Title"]</h1>
+
+<div class="container">
+    <div class="row">
+        @foreach (var typeBlock in Model.TypeBlocks)
+        {
+            <div class="col-md-4 col-sm-6 col-12 mb-3 card-container">
+                <div class="card shadow-sm expand-on-hover d-flex">
+                    <img src="/images/@(typeBlock.TypeID + ".png")" class="card-img-top" alt="Type @typeBlock.TypeID">
+                    <div class="card-body">
+                        <h5 class="card-title">@typeBlock.TypeName</h5>
+                    </div>
+                    <div class="card-description">
+                        <p>@typeBlock.TypeDescription</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

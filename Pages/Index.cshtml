@@ -1,0 +1,84 @@
+﻿@page
+@model IndexModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+</head>
+<body>
+
+<div class="slideshow-container">
+    <div class="mySlides fade">
+        <div class="overlay"></div>
+        <img src="/images/carousel1.png" class="slide-image">
+    </div>
+
+    <div class="mySlides fade">
+        <div class="overlay"></div>
+        <img src="/images/carousel2.png" class="slide-image">
+    </div>
+
+    <div class="mySlides fade">
+        <div class="overlay"></div>
+        <img src="/images/carousel3.png" class="slide-image">
+    </div>
+
+    <div>
+        <img src="/images/down_arrow.png" class="scroll-indicator">
+    </div>
+</div>
+
+<div class="welcome-box">
+    <h1>Welcome to the Home Page</h1>
+
+    <!-- Button to navigate to TestPage -->
+    <a href="/TestPage" class="btn btn-primary">
+        Test Page
+    </a>
+
+    <a href="/FlowBlox/" class="btn btn-primary">
+        Templates
+    </a>
+
+    <a href="/BloxBuilder/" class="btn btn-primary">
+        Blox Builder
+    </a>
+</div>
+
+<div style="height: 100vh;">
+</div>
+
+</body>
+</html>
+
+
+<script>
+let slideIndex = 0;
+showSlides();
+
+function showSlides() {
+    let i;
+    let slides = document.getElementsByClassName("mySlides");
+
+    // Remove active class from all slides
+    for (i = 0; i < slides.length; i++) {
+        slides[i].classList.remove("active");
+    }
+
+    // Increment the slide index
+    slideIndex++;
+    if (slideIndex > slides.length) {
+        slideIndex = 1; // Reset to first slide
+    }
+
+    // Add active class to the current slide
+    slides[slideIndex - 1].classList.add("active");
+
+    // Change slides every 2 seconds
+    setTimeout(showSlides, 4000);
+}
+</script>
+

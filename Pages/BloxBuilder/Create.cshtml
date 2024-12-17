@@ -1,0 +1,203 @@
+@page
+@model PAMTestFlow.Pages.BloxBuilder.CreateModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<div class="create-block-container">
+    <div class="block-input-boxes">
+        <h1>CREATE</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="form-group">
+                        <label class="control-label">Block Name</label>
+                        <input asp-for="BuildingBlock.BlockName" class="form-control" style="width: 400px; margin: 10px;"/>
+                        <span asp-validation-for="BuildingBlock.BlockName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Block Type</label>
+                        <select asp-for="BuildingBlock.TypeID" class="form-control" style="width: 400px; margin: 10px;" asp-items="ViewBag.TypeID" id="BuildingBlock_TypeID">
+                            <option value="">Select Block Type</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Template</label>
+                        <select asp-for="BuildingBlock.TemplateID" class="form-control" style="width: 400px; margin: 10px;" asp-items="ViewBag.TemplateID">
+                            <option value="">Select Template</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Wait Interval</label>
+                        <input asp-for="BuildingBlock.WaitInterval" class="form-control" style="width: 400px; margin: 10px;" asp-items="ViewBag.WaitInterval">
+                        <span asp-validation-for="BuildingBlock.WaitInterval" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <div id="userInputsContainer">
+                            <!-- Dynamic inputs will be populated here by JavaScript -->
+                        </div>
+                    </div>
+
+                    <br>
+                    <div class="form-group">
+                        <input type="submit" value="Create" class="btn btn-primary" />
+                        <button type="button" style="margin: 10px;" onclick="window.location.href='@Url.Page("/BloxBuilder/Index", new { templateId = Model.BuildingBlock.TemplateID })'" class="btn btn-secondary">Back to List</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="block-element-grabber">
+        <h1>Element Converter</h1>
+        <form>
+            <div class="converter-container">
+                <div class="form-group">
+                    <label for="elementInput">Input Whole Element</label>
+                    <textarea id="elementInput" name="elementInput" class="ElementInput" rows="4"></textarea>
+                </div>
+                <div class="form-group" style="padding-top: 10px;">
+                    <label for="elementOutput">Selector Output</label>
+                    <textarea id="elementOutput" name="elementOutput" class="ElementOutput" rows="4" readonly></textarea>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <div class="converter-buttons">
+                    <button type="button" class="converter-button" value="Convert">Convert</button>
+                    <button type="button" onclick="window.open('https://youtu.be/84LW2EpEp_8', '_blank')" class="btn-circle">?</button>
+                    <button type="button" class="converter-button" value="Copy">Copy</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Listen for changes in the TypeID dropdown
+        document.getElementById("BuildingBlock_TypeID").addEventListener("change", function () {
+            const typeID = this.value;
+            const userInputsContainer = document.getElementById("userInputsContainer");
+
+            if (typeID) {
+                // Make an AJAX call to fetch the NoRows value for the selected TypeID
+                fetch(`/BloxBuilder/Create?handler=NoRows&id=${typeID}`)
+                .then(response => {
+                    console.log(response); // Log the raw response
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // Parse JSON if response is OK
+                })
+                .then(data => {
+                    // Get the NoRows value
+                    const noRows = data.noRows || 0;
+                    const container = document.getElementById("userInputsContainer");
+
+                    // Clear existing inputs
+                    container.innerHTML = "";
+
+                    // Create new input fields based on NoRows
+                    for (let i = 0; i < noRows; i++) {
+                        const inputDiv = document.createElement("div");
+                        inputDiv.classList.add("form-group");
+
+                        const inputLabel = document.createElement("label");
+                        inputLabel.innerText = `User Input ${i + 1}`;
+                        inputDiv.appendChild(inputLabel);
+
+                        const inputField = document.createElement("input");
+                        inputField.type = "text";
+                        inputField.name = `UserInputs[${i}].UserInput`;
+                        inputField.classList.add("form-control");
+                        inputDiv.appendChild(inputField);
+
+                        container.appendChild(inputDiv);
+                    }
+                })
+                .catch(error => console.error('Error fetching NoRows:', error));
+            } else {
+                // Clear the container if no TypeID is selected
+                userInputsContainer.innerHTML = "";
+            }
+        });
+
+        // Function to convert an HTML element string to a Playwright selector
+        function convertElement() {
+            const input = document.querySelector('.ElementInput').value.trim();
+            const outputBox = document.querySelector('.ElementOutput');
+
+            try {
+                // Parse the input HTML element
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(input, 'text/html');
+                const element = doc.body.firstElementChild; // Use `firstElementChild` for valid element selection
+
+                if (!element) {
+                    outputBox.value = 'Invalid HTML input. Please provide a valid HTML element.';
+                    return;
+                }
+
+                // Initialize selector
+                let selector = element.tagName.toLowerCase(); // Start with the tag name
+
+                // Add ID if available and valid
+                if (element.id && /^[A-Za-z][-A-Za-z0-9_:.]*$/.test(element.id)) { // Validate ID according to HTML spec
+                    selector += `#${element.id}`;
+                }
+
+                // Add classes if available and valid
+                if (element.className) {
+                    const classes = element.className.trim().split(/\s+/).filter(cls => /^[A-Za-z][-A-Za-z0-9_:.]*$/.test(cls)); // Validate class names
+                    if (classes.length) {
+                        selector += `.${classes.join('.')}`;
+                    }
+                }
+
+                // Add attributes if available
+                for (const attr of element.attributes) {
+                    if (attr.name !== 'id' && attr.name !== 'class') {
+                        const attrValue = attr.value.replace(/"/g, '\\"'); // Escape double quotes in attribute values
+                        selector += `[${attr.name}="${attrValue}"]`;
+                    }
+                }
+
+                // Fallback if no ID, class, or attributes are available
+                if (selector === element.tagName.toLowerCase()) {
+                    const parent = element.parentElement;
+                    if (parent) {
+                        const index = Array.from(parent.children).indexOf(element) + 1; // Get nth-child index
+                        selector += `:nth-child(${index})`;
+                    }
+                }
+
+                // Output the selector
+                outputBox.value = selector;
+            } catch (error) {
+                console.error('Error parsing element:', error);
+                outputBox.value = 'Error parsing the input element. Ensure it is valid HTML.';
+            }
+        }
+
+        // Attach the converter function to the Convert button
+        document.querySelector('.converter-button[value="Convert"]').addEventListener('click', function (e) {
+            e.preventDefault(); // Prevent form submission
+            convertElement();
+        });
+
+        // Copy functionality for the Copy button
+        document.querySelector('.converter-button[value="Copy"]').addEventListener('click', function (e) {
+            e.preventDefault();
+            const outputBox = document.querySelector('.ElementOutput');
+            outputBox.select();
+            document.execCommand('copy');
+        });
+    </script>
+}

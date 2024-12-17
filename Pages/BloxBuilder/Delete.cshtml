@@ -1,0 +1,74 @@
+@page
+@model PAMTestFlow.Pages.BloxBuilder.DeleteModel
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>Delete</h1>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    @if (Model.BuildingBlock != null)
+    {
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.BuildingBlock.BlockName)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BuildingBlock.BlockName)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.BuildingBlock.SequenceOrder)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BuildingBlock.SequenceOrder)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.BuildingBlock.BlockStatus)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BuildingBlock.BlockStatus)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.BuildingBlock.Template)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BuildingBlock.Template.TemplateName)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.BuildingBlock.TypeBlock)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BuildingBlock.TypeBlock.TypeName)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.BuildingBlock.UserInputs)
+            </dt>
+            <dd class="col-sm-10">
+                @if (Model.BuildingBlock.UserInputs != null && Model.BuildingBlock.UserInputs.Any())
+                {
+                    @foreach (var input in Model.BuildingBlock.UserInputs)
+                    {
+                        <div>@Html.DisplayFor(modelItem => input.UserInput)</div>
+                    }
+                }
+                else
+                {
+                    <span>No user inputs available</span>
+                }
+            </dd>
+        </dl>
+
+        <form method="post">
+            <input type="hidden" asp-for="BuildingBlock.BlockID" />
+            <input type="submit" value="Delete" class="btn btn-danger" /> |
+            <a asp-page="/BloxBuilder/Index" asp-route-templateId="@Model.BuildingBlock.TemplateID">Back to List</a>
+        </form>
+    }
+    else
+    {
+        <p>Building block not found.</p>
+    }
+</div>

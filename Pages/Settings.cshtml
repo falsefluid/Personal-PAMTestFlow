@@ -1,0 +1,22 @@
+@page
+@model PAMTestFlow.Pages.SettingsModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<body id="body">
+    <h2>@ViewData["Title"]</h2>
+    <div>
+        <label>Theme:</label>
+    </div>
+    <button type="button" name="dark_light" onclick="toggleDarkLight()" title="Toggle dark/light mode">
+        <img src="/images/4.png" alt="UFO" style="width: 50px; height: auto;" />
+    </button>
+</body>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
